@@ -99,7 +99,9 @@
 ;; "in real life" it would be a helper function of eval-exp.
 
 (define (eval-under-env e env)
-  (cond [(num? e) (if (integer? (num-int e))
+  (cond
+        ;; Values
+        [(num? e) (if (integer? (num-int e))
                       e
                       (error "Not a valid num expression")
                       )]
@@ -112,6 +114,8 @@
 
         [(var? e) (envlookup env (var-string e))]
 
+        
+        ;; Arithmetic
         [(plus? e) 
          (let ([v1 (eval-under-env (plus-e1 e) env)]
                [v2 (eval-under-env (plus-e2 e) env)])
@@ -133,8 +137,8 @@
          ]
 
         [(mult? e) 
-         (let ([v1 (eval-under-env (minus-e1 e) env)]
-               [v2 (eval-under-env (minus-e2 e) env)])
+         (let ([v1 (eval-under-env (mult-e1 e) env)]
+               [v2 (eval-under-env (mult-e2 e) env)])
            (if (and (num? v1)
                     (num? v2))
                (num (* (num-int v1) 
@@ -143,28 +147,29 @@
          ]
 
         [(div? e) 
-         (let ([v1 (eval-under-env (minus-e1 e) env)]
-               [v2 (eval-under-env (minus-e2 e) env)])
+         (let ([v1 (eval-under-env (div-e1 e) env)]
+               [v2 (eval-under-env (div-e2 e) env)])
            (if (and (num? v1)
                     (num? v2))
-               (num round (/ (num-int v1) 
-                             (num-int v2)))
+               (num (truncate (/ (num-int v1) 
+                             (num-int v2))))
                (error "NUMEX division applied to non-number")))
          ]
         
         [(neg? e)
-         (let ([v (eval-under0
-
-
+         (let ([v (eval-under-env (neg-e e) env)])
+           (if (num? v)
+               (num (* (num-int v) -1))
+               (error "NUMEX neg applied to non-number")))
          ]
-        ;; CHANGE add more cases here
 
+
+         
+
+        
         [#t (error (format "bad NUMEX expression: ~v" e))]))
 
 
-
-(define env (list (list "a" 1)))
-(eval-under-env (num 1) env)
 
 
 ;; Do NOT change
@@ -172,8 +177,7 @@
 (define (eval-exp e)
 
   (eval-under-env e null))
-
-
+                                            
 #|
 
 ;; Problem 3

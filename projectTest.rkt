@@ -1,6 +1,6 @@
 #lang racket
 
-(require "project.rkt")
+(require "p.rkt")
 
 ; This file uses Racket's unit-testing framework, which is convenient but not required of you.
 
@@ -13,21 +13,32 @@
   (test-suite
    "Project Tests"
 
-   (check-equal? (eval-exp (plus (num 2) (num 2))) (num 4) "plus simple test")
+   ; arithmetic functions test
 
-   (check-exn (lambda (x) (string=? (exn-message x) "NUMEX addition applied to non-number"))
-              (lambda () (eval-exp (plus (num 2) (bool #t))))
-              "plus bad argument")
+   (check-equal? (eval-exp (plus (num 2) (num 2))) (num 4) "test1")
+   (check-equal? (eval-exp (minus (num -5) (num 2))) (num -7) "test2")
+   (check-equal? (eval-exp (mult (num 5) (num 2))) (num 10) "test3")
+   (check-equal? (eval-exp (div (num -5) (num -2))) (num 2) "test4")
+   (check-exn exn:fail?
+              (lambda () (eval-exp (div (num 5) (num 0)))
+              "test5"))
 
-   (check-equal? (mupllist->racketlist
-                  (eval-exp (call (call mupl-all-gt (int 9))
-                                  (racketlist->mupllist 
-                                   (list (int 10) (int 9) (int 15))))))
-                 (list (int 10) (int 15))
-                 "provided combined test using problems 1, 2, and 4")
+   (check-equal? (eval-exp (plus (num -5) (neg (minus (num -2) (num 3)))))
+                           (num 0) "test6")
+
+   (check-equal? (eval-exp (neg (mult (num 5) (plus
+                                                (div (num -2) (num 3))
+                                                (minus (num 1) (num -1)
+                                                       )))))
+                           (num -10) "test7")
+   (check-exn exn:fail?
+              (lambda () (eval-exp (plus (num 5.2) (num 0.0)))
+              "test8"))
+
    ))
 
 
 (require rackunit/text-ui)
 ;; runs the test
 (run-tests tests)
+

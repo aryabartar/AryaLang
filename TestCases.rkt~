@@ -16,7 +16,6 @@
    (check-equal? (eval-exp (minus (num -5) (num 2))) (num -7) "test2")
    (check-equal? (eval-exp (mult (num 5) (num 2))) (num 10) "test3")
    (check-equal? (eval-exp (div (num -5) (num -2))) (num 2) "test4")
-   
    (check-exn exn:fail?
               (lambda () (eval-exp (div (num 5) (num 0)))
               "test5"))
@@ -24,18 +23,16 @@
    (check-equal? (eval-exp (plus (num -5) (neg (minus (num -2) (num 3)))))
                            (num 0) "test6")
 
-
-   (check-equal? (eval-exp (neg (mult (num 5) (plus
+    (check-equal? (eval-exp (neg (mult (num 5) (plus
                                                 (div (num -2) (num 3))
                                                 (minus (num 1) (num -1)
                                                        )))))
                            (num -10) "test7")
-    
    (check-exn exn:fail?
               (lambda () (eval-exp (plus (num 5.2) (num 0.0)))
               "test8"))
 
-   #|
+   
 
    ; logical functions test
    (check-equal? (eval-exp (andalso (bool #t) (bool #t))) (bool #t) "test9")
@@ -126,7 +123,7 @@
               (lambda () (eval-exp (neg (munit))))
               "test44")
 
-   #|
+   
      
    (check-equal? (numexlist->racketlist
                   (eval-exp (apply (apply numex-all-gt (num 5))
@@ -134,8 +131,6 @@
                                    (list (num 10) (num 4) (num 5) (num 15))))))
                  (list (num 10) (num 15))
                  "test45")
-
-|#
 
    (test-equal? "test46"
     (list (num 3) (num 4) (bool #t))
@@ -446,7 +441,7 @@
 (check-equal? (eval-exp (letrec "is-even" (lam null "n" (orelse (iseq (var "n") (num 0)) (apply (var "is-odd") (minus (var "n") (num 1))))) "is-odd" (lam null "n" (andalso (neg (iseq (var "n") (num 0))) (apply (var "is-even") (minus (var "n") (num 1))))) (apply (var "is-odd") (num 10)))) (bool #f) "test139")
 (check-equal? (eval-exp (letrec "is-even" (lam null "n" (orelse (iseq (var "n") (num 0)) (apply (var "is-odd") (minus (var "n") (num 1))))) "is-odd" (lam null "n" (andalso (neg (iseq (var "n") (num 0))) (apply (var "is-even") (minus (var "n") (num 1))))) (apply (var "is-even") (num 11)))) (bool #f) "test140")
 (check-equal? (eval-exp (letrec "is-even" (lam null "n" (orelse (iseq (var "n") (num 0)) (apply (var "is-odd") (minus (var "n") (num 1))))) "is-odd" (lam null "n" (andalso (neg (iseq (var "n") (num 0))) (apply (var "is-even") (minus (var "n") (num 1))))) (apply (var "is-even") (num 10)))) (bool #t) "test141")
-|#
+
    ))
 
 
