@@ -35,7 +35,7 @@
               (lambda () (eval-exp (plus (num 5.2) (num 0.0)))
               "test8"))
 
-   #|
+
 
    ; logical functions test
    (check-equal? (eval-exp (andalso (bool #t) (bool #t))) (bool #t) "test9")
@@ -43,8 +43,10 @@
    (check-equal? (eval-exp (orelse (bool #t) (num 2))) (bool #t) "test12")
    (check-equal? (eval-exp (andalso (bool #f) (div (num 2) (num 0)))) (bool #f) "test13")
    (check-equal? (eval-exp (andalso (bool #t) (neg (bool #t)))) (bool #f) "test14")
+
    (check-equal? (eval-exp (orelse (iseq (num 2) (num 2)) (bool #f))) (bool #t) "test15")
    (check-equal? (eval-exp (neg (iseq (bool #t) (bool #f)))) (bool #t) "test16")
+   #|
    (check-equal? (eval-exp (iseq (num 2) (bool #f))) (bool #f) "test17")
    (check-equal? (eval-exp (iseq (num 2) (num -2))) (bool #f) "test18") 
    (check-equal? (eval-exp (neg (ismunit (apair (num 3) (munit))))) (bool #t) "test19")

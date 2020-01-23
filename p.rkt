@@ -28,9 +28,13 @@
 (struct mult (e1 e2) #:transparent)
 (struct div (e1 e2) #:transparent)
 (struct neg (e) #:transparent)
+
+
 (struct andalso (e1 e2) #:transparent)
 (struct orelse (e1 e2) #:transparent)
 
+
+(struct cnd (e1 e2 e3) #:transparent)
 
 
 (struct lam  (nameopt formal body) #:transparent) ;; a recursive(?) 1-argument function
@@ -158,17 +162,49 @@
         
         [(neg? e)
          (let ([v (eval-under-env (neg-e e) env)])
-           (if (num? v)
-               (num (* (num-int v) -1))
-               (error "NUMEX neg applied to non-number")))
-         ]
-
-
-         
+           (cond [(num? v) (num (* (num-int v) -1))]
+                 [(bool? v) (bool (not (bool-boolean v)))]
+                 [#t (error "NUMEX neg applied to non-number")]))]
 
         
-        [#t (error (format "bad NUMEX expression: ~v" e))]))
+        ;;Logical
+        [(andalso? e)
+         (let ([v1 (eval-under-env (andalso-e1 e) env)])
+           (if (bool? v1)
+               (if (bool-boolean v1)
+                   (let ([v2 (eval-under-env (andalso-e2 e) env)])
+                     (if (bool? v2)
+                         v2
+                         (error "NUMEX andalso applied to non-boolean")))
+                   (bool #f)
+                   )
+               (error "NUMEX andalso applied to non-boolean")))
+         ]
+        
+        [(orelse? e)
+         (let ([v1 (eval-under-env (orelse-e1 e) env)])
+           (if (bool? v1)
+               (if (bool-boolean v1)
+                   (bool #t)
+                   (let ([v2 (eval-under-env (orelse-e2 e) env)])
+                     (if (bool? v2)
+                         v2
+                         (error "NUMEX andalso applied to non-boolean")))
+                   )
+               (error "NUMEX orelse applied to non-boolean")))
+         ]
 
+        ;;Condition
+        [(cnd? e)
+         (let ([v (eval-under-env (cnd-e1 e) env)])
+           (if (bool? v)
+               (if (bool-boolean v)
+                   (eval-under-env (cnd-e2 e) env)
+                   (eval-under-env (cnd-e3 e) env))
+               (error "NUMEX cnd condition is not bool")))]
+        ;;[(iseq
+   )
+)
 
 
 
