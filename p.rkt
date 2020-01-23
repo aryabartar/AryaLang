@@ -18,14 +18,18 @@
 
 
 
-(struct var  (string) #:transparent)  ;; a variable, e.g., (var "foo")
-(struct num  (int)    #:transparent)  ;; a constant number, e.g., (num 17)
+(struct var  (string) #:transparent)
+(struct num  (int)    #:transparent)  
 (struct bool (boolean)  #:transparent)
 
 
-(struct plus  (e1 e2)  #:transparent)  ;; add two expressions
-
-
+(struct plus  (e1 e2)  #:transparent) 
+(struct minus (e1 e2) #:transparent)
+(struct mult (e1 e2) #:transparent)
+(struct div (e1 e2) #:transparent)
+(struct neg (e) #:transparent)
+(struct andalso (e1 e2) #:transparent)
+(struct orelse (e1 e2) #:transparent)
 
 
 
@@ -95,40 +99,82 @@
 ;; "in real life" it would be a helper function of eval-exp.
 
 (define (eval-under-env e env)
-  (cond [(num? e) (if (integer? (
+  (cond [(num? e) (if (integer? (num-int e))
+                      e
+                      (error "Not a valid num expression")
+                      )]
+
+        [(bool? e) (if (boolean? (bool-boolean e))
+                       e
+                       (error "Not a valid bool expression")
+                      )]
+        [(closure? e) e]
 
         [(var? e) (envlookup env (var-string e))]
+
         [(plus? e) 
-
          (let ([v1 (eval-under-env (plus-e1 e) env)]
-
                [v2 (eval-under-env (plus-e2 e) env)])
-
            (if (and (num? v1)
-
                     (num? v2))
-
                (num (+ (num-int v1) 
-
                        (num-int v2)))
+               (error "NUMEX addition applied to non-number")))
+         ]
 
-               (error "NUMEX addition applied to non-number")))]
+        [(minus? e) 
+         (let ([v1 (eval-under-env (minus-e1 e) env)]
+               [v2 (eval-under-env (minus-e2 e) env)])
+           (if (and (num? v1)
+                    (num? v2))
+               (num (- (num-int v1) 
+                       (num-int v2)))
+               (error "NUMEX subtraction applied to non-number")))
+         ]
 
+        [(mult? e) 
+         (let ([v1 (eval-under-env (minus-e1 e) env)]
+               [v2 (eval-under-env (minus-e2 e) env)])
+           (if (and (num? v1)
+                    (num? v2))
+               (num (* (num-int v1) 
+                       (num-int v2)))
+               (error "NUMEX multiplication applied to non-number")))
+         ]
+
+        [(div? e) 
+         (let ([v1 (eval-under-env (minus-e1 e) env)]
+               [v2 (eval-under-env (minus-e2 e) env)])
+           (if (and (num? v1)
+                    (num? v2))
+               (num round (/ (num-int v1) 
+                             (num-int v2)))
+               (error "NUMEX division applied to non-number")))
+         ]
+        
+        [(neg? e)
+         (let ([v (eval-under0
+
+
+         ]
         ;; CHANGE add more cases here
 
         [#t (error (format "bad NUMEX expression: ~v" e))]))
 
 
 
+(define env (list (list "a" 1)))
+(eval-under-env (num 1) env)
 
-#|
+
 ;; Do NOT change
 
 (define (eval-exp e)
 
   (eval-under-env e null))
 
-        
+
+#|
 
 ;; Problem 3
 
