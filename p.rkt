@@ -19,8 +19,9 @@
 
 
 (struct var  (string) #:transparent)  ;; a variable, e.g., (var "foo")
-
 (struct num  (int)    #:transparent)  ;; a constant number, e.g., (num 17)
+(struct bool (boolean)  #:transparent)
+
 
 (struct plus  (e1 e2)  #:transparent)  ;; add two expressions
 
@@ -29,7 +30,6 @@
 
 
 (struct lam  (nameopt formal body) #:transparent) ;; a recursive(?) 1-argument function
-
 (struct apply (funexp actual)       #:transparent) ;; function application
 
 
@@ -37,13 +37,11 @@
 
 
 (struct munit   ()      #:transparent) ;; unit value -- good for ending a list
-
 (struct ismunit (e)     #:transparent) ;; if e1 is unit then true else false
 
 
 
 ;; a closure is not in "source" programs; it is what functions evaluate to
-
 (struct closure (env f) #:transparent) 
 
 
@@ -51,11 +49,8 @@
 
 
 (struct key  (s e) #:transparent) ;; key holds corresponding value of s which is e
-
 (struct record (k r) #:transparent) ;; record holds several keys
-
 (struct value (s r) #:transparent) ;; value returns corresponding value of s in r
-
 
 
 (struct letrec (s1 e1 s2 e2 e3) #:transparent) ;; a letrec expression for recursive definitions
@@ -79,7 +74,6 @@
       null
       (cons (apair-e1 xs) (numexlist->racketlist  (apair-e2 xs)))))
 
-(numexlist->racketlist (apair 1 (apair 2 (munit))))
 
 
 ;; Problem 2
@@ -87,32 +81,23 @@
 
 
 ;; lookup a variable in an environment
-
-;; Complete this function
-
 (define (envlookup env str)
   (cond [(null? env) (error "unbound variable during evaluation" str)]
         [(eq? (car (car env)) str) (cdr (car env))]
-        [#t (envlookup (
-
-		)
-
+        [#t (envlookup (cdr (env)) str)]
+        )
  )
 
 
 
 ;; Complete more cases for other kinds of NUMEX expressions.
-
 ;; We will test eval-under-env by calling it directly even though
-
 ;; "in real life" it would be a helper function of eval-exp.
 
 (define (eval-under-env e env)
+  (cond [(num? e) (if (integer? (
 
-  (cond [(var? e) 
-
-         (envlookup env (var-string e))]
-
+        [(var? e) (envlookup env (var-string e))]
         [(plus? e) 
 
          (let ([v1 (eval-under-env (plus-e1 e) env)]
@@ -135,6 +120,8 @@
 
 
 
+
+#|
 ;; Do NOT change
 
 (define (eval-exp e)
