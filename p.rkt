@@ -17,7 +17,7 @@
 ;; CHANGE add the missing ones
 
 
-
+(struct munit   ()      #:transparent)
 (struct var  (string) #:transparent)
 (struct num  (int)    #:transparent)  
 (struct bool (boolean)  #:transparent)
@@ -35,19 +35,18 @@
 
 
 (struct cnd (e1 e2 e3) #:transparent)
+(struct iseq (e1 e2) #:transparent)
+(struct ismunit (e) #:transparent)
+(struct ifnzero (e1 e2 e3) #:transparent)
+(struct ifleq (e1 e2 e3 e4) #:transparent)
 
 
-(struct lam  (nameopt formal body) #:transparent) ;; a recursive(?) 1-argument function
-(struct apply (funexp actual)       #:transparent) ;; function application
+(struct lam  (s1 s2 e) #:transparent) ;; a recursive(?) 1-argument function
+(struct apply (e1 e2)       #:transparent) ;; function application
+(struct with (s e1 e2) #:transparent)
 
-
-
-
-
-(struct munit   ()      #:transparent) ;; unit value -- good for ending a list
-(struct ismunit (e)     #:transparent) ;; if e1 is unit then true else false
-
-
+(struct 1st (e) #:transparent)
+(struct 2nd (e) #:transparent)
 
 ;; a closure is not in "source" programs; it is what functions evaluate to
 (struct closure (env f) #:transparent) 
@@ -116,6 +115,14 @@
                       )]
         [(closure? e) e]
 
+        [(apair? e)
+         (let ([v1 (eval-under-env (apair-e1 e) env)]
+               [v2 (eval-under-env (apair-e2 e) env)])
+           (apair v1 v2))]
+
+        [(munit? e) e]
+
+                                       
         [(var? e) (envlookup env (var-string e))]
 
         
@@ -164,7 +171,7 @@
          (let ([v (eval-under-env (neg-e e) env)])
            (cond [(num? v) (num (* (num-int v) -1))]
                  [(bool? v) (bool (not (bool-boolean v)))]
-                 [#t (error "NUMEX neg applied to non-number")]))]
+                 [#t (error "NUMEX neg applied to non-number or non-bool")]))]
 
         
         ;;Logical
@@ -202,18 +209,88 @@
                    (eval-under-env (cnd-e2 e) env)
                    (eval-under-env (cnd-e3 e) env))
                (error "NUMEX cnd condition is not bool")))]
-        ;;[(iseq
+
+        [(iseq? e)
+         (let ([v1 (eval-under-env (iseq-e1 e) env)]
+               [v2 (eval-under-env (iseq-e2 e) env)])
+           (cond [(and (num? v1) (num? v2)) (bool (= (num-int v1) (num-int v2)))]
+                 [(and (bool? v1) (bool? v2)) (bool (eq? (bool-boolean v1) (bool-boolean v2)))]
+                 [(and (munit? v1) (munit? v2)) (bool #t)]
+                 [#t (bool #f)]))]
+
+        [(ismunit? e)
+         (let ([v (eval-under-env (ismunit-e e) env)])
+           (if (munit? v)
+               (bool #t)
+               (bool #f)))]
+
+        [(ifnzero? e)
+         (let ([v (eval-under-env (ifnzero-e1 e) env)])
+           (if (num? v)
+               (if (eq? (num-int v) 0)
+                   (eval-under-env (ifnzero-e3 e) env)
+                   (eval-under-env (ifnzero-e2 e) env))
+               (error "NUMEX ifnzero condition is not num")))]
+
+        [(ifleq? e)
+         (let ([v1 (eval-under-env (ifleq-e1 e) env)]
+               [v2 (eval-under-env (ifleq-e2 e) env)])
+            (if (and (num? v1) (num? v2))
+                (if (<= (num-int v1) (num-int v2))
+                    (eval-under-env (ifleq-e3 e) env)
+                    (eval-under-env (ifleq-e4 e) env))
+                (error "NUMEX ifleq e1 or e2 is not num")
+                ))]
+               
+
+        ;; Functions
+        [(lam? e)
+         (let ([v1 (lam-s1 e)]
+               [v2 (lam-s2 e)])
+           (if (and (or (string? v1) (null? v1)) (string? v2))
+               (closure env e)
+               (error "NUMEX lam name or arg is not string/null")))]
+
+        [(apply? e)
+         (let ([clo (eval-under-env (apply-e1 e) env)]
+               [arg (eval-under-env (apply-e2 e) env)])
+           (if (closure? clo)
+               (let ([clo-env (closure-env clo)]
+                     [clo-fun (closure-f clo)])
+                 (if (null? (lam-s1 clo-fun))
+                     (eval-under-env (lam-e clo-fun) (list* (cons (lam-s2 clo-fun) (eval-under-env arg env)) clo-env))
+                     (eval-under-env (lam-e clo-fun) (list* (cons (lam-s2 clo-fun) (eval-under-env arg env)) (cons (lam-s1 clo-fun) clo) clo-env))))
+               (error "NUMEX apply applied to non-function values")))]
+
+        [(with? e)
+         (let ([v (eval-under-env (with-e1 e) env)])
+             (eval-under-env (with-e2 e) (cons (cons (with-s e) v)  env)))]
+
+        ;; Pair
+        [(1st? e)
+         (let ([v (eval-under-env (1st-e e) env)])
+           (if (apair? v)
+               (apair-e1 v)
+               (error "NUMEX first applied to non-apair values")))]
+        
+        [(2nd? e)
+         (let ([v (eval-under-env (2nd-e e) env)])
+           (if (apair? v)
+               (apair-e2 v)
+               (error "NUMEX second applied to non-apair values")))]
+        
+        ;; Else
+        [#t (error (format "bad NUMEX expression ~v" e))]
    )
 )
 
 
-
-;; Do NOT change
-
 (define (eval-exp e)
-
   (eval-under-env e null))
-                                            
+
+
+
+
 #|
 
 ;; Problem 3

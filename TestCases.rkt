@@ -42,15 +42,19 @@
    (check-equal? (eval-exp (orelse (bool #t) (bool #f))) (bool #t) "test10")
    (check-equal? (eval-exp (orelse (bool #t) (num 2))) (bool #t) "test12")
    (check-equal? (eval-exp (andalso (bool #f) (div (num 2) (num 0)))) (bool #f) "test13")
+    
    (check-equal? (eval-exp (andalso (bool #t) (neg (bool #t)))) (bool #f) "test14")
-
+ 
    (check-equal? (eval-exp (orelse (iseq (num 2) (num 2)) (bool #f))) (bool #t) "test15")
+    
    (check-equal? (eval-exp (neg (iseq (bool #t) (bool #f)))) (bool #t) "test16")
-   #|
+    
    (check-equal? (eval-exp (iseq (num 2) (bool #f))) (bool #f) "test17")
    (check-equal? (eval-exp (iseq (num 2) (num -2))) (bool #f) "test18") 
    (check-equal? (eval-exp (neg (ismunit (apair (num 3) (munit))))) (bool #t) "test19")
 
+
+   
    (check-exn exn:fail?
               (lambda () (eval-exp (plus (num 5) (bool #t)))
               "test20"))
@@ -75,12 +79,15 @@
    (check-exn exn:fail?
               (lambda () (eval-exp (plus (munit) (num 2)))
               "test27"))
+
+#|
    (check-exn exn:fail?
               (lambda () (eval-exp (1st (munit)))
               "test28"))
    (check-exn exn:fail?
               (lambda () (eval-exp (2nd (num 3)))
               "test29"))
+|#
 
 
 
@@ -128,16 +135,7 @@
               (lambda () (eval-exp (neg (munit))))
               "test44")
 
-   #|
-     
-   (check-equal? (numexlist->racketlist
-                  (eval-exp (apply (apply numex-all-gt (num 5))
-                                  (racketlist->numexlist 
-                                   (list (num 10) (num 4) (num 5) (num 15))))))
-                 (list (num 10) (num 15))
-                 "test45")
 
-|#
 
    (test-equal? "test46"
     (list (num 3) (num 4) (bool #t))
@@ -168,13 +166,14 @@
    (check-equal? (eval-exp (ifleq (num 4) (num 5) (num 1) (bool #t))) (num 1) "test53")
    (check-equal? (eval-exp (ifleq (num 4) (num 4) (bool #f) (munit))) (bool #f) "test54")
    (check-equal? (eval-exp (ifleq (num 4) (num -4) (num 1) (num 0))) (num 0) "test55")
-  
+
 (check-exn exn:fail?
               (lambda () (eval-exp (ifleq (bool #t) (num -4) (num 1) (num 0))))
               "test56")
 (check-exn exn:fail?
               (lambda () (eval-exp (ifleq (apair (munit) (munit)) (num -4) (num 1) (num 0))))
               "test57")
+
 
 (test-equal? "test58"
                (num 2)
@@ -216,7 +215,7 @@
      (eval-exp (apair (1st (apair (mult (num 7) (num 3)) (num 2)))
                  (2nd (apair (num 3) (bool #t)))
                  )))
-
+#|
   (test-equal? "test66"
      (num 6)
      (eval-exp (with "fnc"
