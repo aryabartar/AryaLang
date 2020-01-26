@@ -215,7 +215,7 @@
      (eval-exp (apair (1st (apair (mult (num 7) (num 3)) (num 2)))
                  (2nd (apair (num 3) (bool #t)))
                  )))
-#|
+
   (test-equal? "test66"
      (num 6)
      (eval-exp (with "fnc"
@@ -242,13 +242,14 @@
 
    (check-equal? (eval-exp (with* (list (cons "f" (num 2)) (cons "y" (var "f"))) (plus (var "f") (plus (var "y") (num 3))))) (num 7) "test72")
    (check-equal? (eval-exp (ifmunit (munit) (plus (num 1) (num 2)) (plus (num 3)(num 4)))) (num 3) "test73")
+
    (check-equal? (eval-exp (ifmunit (bool #f)  (bool 2) (plus (num 1) (num 2)))) (num 3) "test74")
    (check-exn exn:fail?
               (lambda () (eval-exp (neg (munit))))
               "test75")
    (check-equal? (eval-exp (ifneq (num 1) (num 2) (num 3) (num 4) )) (num 3) "test76")
    (check-equal? (eval-exp (ifneq (num 1) (num 1) (num 3) (bool #t))) (bool #t) "test77")
-   
+  
     (check-equal? (num 1)
      (eval-exp (with* (cons (cons "x" (num 1)) null) (var "x")))
      "test78")
@@ -380,6 +381,7 @@
    (check-equal? (eval-exp (with* (list (cons "x" (num 1)) (cons "x" (num 2))) (var "x")))
                  (num 2) "test120")
 
+   
 (check-equal? (eval-exp
                   (apply (apply numex-filter (lam null "x" (plus (num 1) (var "x"))))
                    (apair (num 1) (apair (num 2) (munit)))))
@@ -443,6 +445,7 @@
 (check-equal? (eval-exp (value "Maryam Mirzakhani" (record (key "Donald Knuth" (num 1)) (record (key "John McCarthy" (num 2)) (record (key "Barbara Liskov" (num 3)) (munit)))))) (munit) "test136")
 (check-equal? (eval-exp (value "Bertrand Russell" (record (key "Donald Knuth" (num 1)) (record (key "John McCarthy" (num 2)) (record (key "Barbara Liskov" (num 3)) (record (key "Zohar Manna" (num 4)) (munit))))))) (munit) "test137")
 
+#|
 (check-equal? (eval-exp (letrec "is-even" (lam null "n" (orelse (iseq (var "n") (num 0)) (apply (var "is-odd") (minus (var "n") (num 1))))) "is-odd" (lam null "n" (andalso (neg (iseq (var "n") (num 0))) (apply (var "is-even") (minus (var "n") (num 1))))) (apply (var "is-odd") (num 11)))) (bool #t) "test138")
 (check-equal? (eval-exp (letrec "is-even" (lam null "n" (orelse (iseq (var "n") (num 0)) (apply (var "is-odd") (minus (var "n") (num 1))))) "is-odd" (lam null "n" (andalso (neg (iseq (var "n") (num 0))) (apply (var "is-even") (minus (var "n") (num 1))))) (apply (var "is-odd") (num 10)))) (bool #f) "test139")
 (check-equal? (eval-exp (letrec "is-even" (lam null "n" (orelse (iseq (var "n") (num 0)) (apply (var "is-odd") (minus (var "n") (num 1))))) "is-odd" (lam null "n" (andalso (neg (iseq (var "n") (num 0))) (apply (var "is-even") (minus (var "n") (num 1))))) (apply (var "is-even") (num 11)))) (bool #f) "test140")
