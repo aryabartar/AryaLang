@@ -407,61 +407,131 @@
 (struct fun-challenge (nameopt formal body freevars) #:transparent) ;; a recursive(?) 1-argument function
 
 
-(define (eval-free-val e bound)
+(define (get-free e b)
   (cond
-        [(var? e)      (if (set-member? bound (var-string e)) (set) (set (var-string e)))]
-        [(or           (empty? e) (num? e) (string? e) (bool? e) (munit? e)) (set)] 
-        [(neg? e)      (eval-free-val (neg-e e)     bound)]
-        [(ismunit? e)  (eval-free-val (ismunit-e e) bound)]
-        [(key? e)      (eval-free-val (key-e e)     bound)]
-        [(value? e)    (eval-free-val (value-r e)    bound)]
-        [(1st? e)      (eval-free-val (1st-e e)      bound)]
-        [(2nd? e)      (eval-free-val (2nd-e e)      bound)]
-        [(plus? e)     (set-union (eval-free-val (plus-e1 e) bound)    (eval-free-val (plus-e2 e) bound))]
-        [(minus? e)    (set-union (eval-free-val (minus-e1 e) bound)   (eval-free-val (minus-e2 e) bound))]
-        [(mult? e)     (set-union (eval-free-val (mult-e1 e) bound)    (eval-free-val (mult-e2 e) bound))]
-        [(div? e)      (set-union (eval-free-val (div-e1 e) bound)     (eval-free-val (div-e2 e) bound))]
-        [(andalso? e)  (set-union (eval-free-val (andalso-e1 e) bound) (eval-free-val (andalso-e2 e) bound))]
-        [(orelse? e)   (set-union (eval-free-val (orelse-e1 e) bound)  (eval-free-val (orelse-e2 e) bound))]
-        [(iseq? e)     (set-union (eval-free-val (iseq-e1 e) bound)    (eval-free-val (iseq-e2 e) bound))]
-        [(cons? e)     (set-union (eval-free-val (car e) bound)        (eval-free-val (cdr e) bound))]
-        [(apair? e)    (set-union (eval-free-val (apair-e1 e) bound)   (eval-free-val (apair-e2 e) bound))]
-        [(record? e)   (set-union (eval-free-val (record-k e) bound)   (eval-free-val (record-r e) bound))]
-        [(apply? e)    (set-union (eval-free-val (apply-e1 e) bound)   (eval-free-val (apply-e2 e) bound)) ]
-        [(cnd? e)      (set-union (set-union (eval-free-val (cnd-e1 e) bound) (eval-free-val (cnd-e2 e) bound) ) (eval-free-val (cnd-e3 e) bound))] 
-        [(ifnzero? e)  (set-union (set-union (eval-free-val (ifnzero-e1 e) bound) (eval-free-val (ifnzero-e2 e) bound) ) (eval-free-val (ifnzero-e3 e) bound))]
-        [(letrec? e)   (set-union (set-union (eval-free-val (letrec-e1 e) bound) (eval-free-val (letrec-e2 e) bound) ) (eval-free-val (letrec-e3 e) bound))]
-        [(ifleq? e)    (set-union (set-union (eval-free-val (ifleq-e1 e) bound) (eval-free-val (ifleq-e2 e) bound) )  (set-union (eval-free-val (ifleq-e3 e) bound) (eval-free-val (ifleq-e4 e) bound)))]
-        [(with? e)     (set-union (eval-free-val (with-e1 e) bound) (eval-free-val (with-e2 e)  (set-add bound (with-s e))))]
-        [(lam? e)      (eval-free-val (lam-e e) (set-union bound (set-add (set-add null (lam-s1 e)) (lam-s2 e))))]
-       
-        ))
+        [(string? e) (set)]
+        [(num? e) (set)]
+        [(bool? e) (set)]
+        [(closure? e) (set)]
+        [(munit? e) (set)]
+
+        [(apair? e)
+         (set-union (get-free (apair-e1 e) b) (get-free (apair-e2 e) b))]
+        [(var? e)
+         (if (set-member? b (var-string e)) (set) (set (var-string e)))]
+        
+        [(plus? e)
+         (set-union (get-free (plus-e1 e) b) (get-free (plus-e2 e) b))]
+        [(minus? e)
+         (set-union (get-free (minus-e1 e) b) (get-free (minus-e2 e) b))]
+        [(mult? e)
+         (set-union (get-free (mult-e1 e) b) (get-free (mult-e2 e) b))]
+        [(div? e)
+         (set-union (get-free (div-e1 e) b) (get-free (div-e2 e) b))]
+        
+        [(neg? e)
+         (get-free (neg-e e) b)]
+        [(andalso? e)
+         (set-union (get-free (andalso-e1 e) b) (get-free (andalso-e2 e) b))]
+        [(orelse? e)
+         (set-union (get-free (orelse-e1 e) b) (get-free (orelse-e2 e) b))]
+
+        [(cnd? e)
+         (set-union (set-union (get-free (cnd-e1 e) b) (get-free (cnd-e2 e) b) ) (get-free (cnd-e3 e) b))] 
+        [(iseq? e)
+         (set-union (get-free (iseq-e1 e) b) (get-free (iseq-e2 e) b))]
+        [(ismunit? e)
+         (get-free (ismunit-e e) b)]
+        [(ifnzero? e)
+         (set-union (get-free (ifnzero-e1 e) b) (get-free (ifnzero-e2 e) b) (get-free (ifnzero-e3 e) b))]
+        [(ifleq? e)
+         (set-union (get-free (ifleq-e1 e) b) (get-free (ifleq-e2 e) b) (get-free (ifleq-e3 e) b) (get-free (ifleq-e4 e) b))]
+
+        [(lam? e)
+         (get-free (lam-e e) (set-union b (set-add (set-add null (lam-s1 e)) (lam-s2 e))))]
+        [(apply? e)
+         (set-union (get-free (apply-e1 e) b) (get-free (apply-e2 e) b))]
+        [(with? e)
+         (let ([newbound (set-add b (with-s e))])
+           (set-union (get-free (with-e1 e) b) (get-free (with-e2 e)  newbound)))]
+        
+        [(1st? e)
+         (get-free (1st-e e) b)]
+        [(2nd? e)
+         (get-free (2nd-e e) b)]
+
+        [(key? e)
+         (get-free (key-e e) b)]
+        [(record? e)
+         (set-union (get-free (record-k e) b) (get-free (record-r e) b))]
+        [(value? e)
+         (get-free (value-r e) b)]
+        [(letrec? e)
+         (set-union (get-free (letrec-e1 e) b) (get-free (letrec-e2 e) b) (get-free (letrec-e3 e) b))]
+        )
+  )
 
 (define (compute-free-vars e)
-     (cond[(or (var? e) (empty? e) (num? e) (string? e) (bool? e) (munit? e)) e]
-         [(lam? e)     (fun-challenge (lam-s2 e) (lam-s1 e) (lam-e e) (eval-free-val (lam-e e) (set-add (set-add null (lam-s1 e)) (lam-s2 e))))]
-         [(neg? e)     (neg (compute-free-vars e))]
-         [(ismunit? e) (ismunit (compute-free-vars e))]
-         [(key? e)     (key (compute-free-vars e))]
-         [(value? e)   (value (compute-free-vars e))]
-         [(1st? e)     (1st (compute-free-vars e))]
-         [(2nd? e)     (2nd (compute-free-vars e))]
-         [(plus? e)    (plus (compute-free-vars (plus-e1 e)) (compute-free-vars (plus-e2 e)))]
-         [(minus? e)   (minus (compute-free-vars (minus-e1 e)) (compute-free-vars (minus-e2 e)))]
-         [(mult? e)    (mult (compute-free-vars (mult-e1 e)) (compute-free-vars (mult-e2 e)))]
-         [(div? e)     (div (compute-free-vars (div-e1 e)) (compute-free-vars (div-e2 e)))]
-         [(andalso? e) (andalso (compute-free-vars (andalso-e1 e)) (compute-free-vars (andalso-e2 e)))]
-         [(orelse? e)  (orelse (compute-free-vars (orelse-e1 e)) (compute-free-vars (orelse-e2 e)))]
-         [(iseq? e)     (iseq (compute-free-vars (iseq-e1 e)) (compute-free-vars (iseq-e2 e)))]
-         [(cons? e)    (cons (compute-free-vars (car e) (compute-free-vars (cdr e))))]
-         [(apair? e)   (apair (compute-free-vars (apair-e1 e) (compute-free-vars (apair-e2 e))))]
-         [(record? e)  (record (compute-free-vars (record-k e)) (compute-free-vars (record-r e)))]
-         [(apply? e)   (apply (compute-free-vars (apply-e1)) (compute-free-vars (apply-e2)))]
-         [(cnd? e)     (cnd (compute-free-vars (cnd-e1)) (compute-free-vars (cnd-e2)) (compute-free-vars (cnd-e3)))]
-         [(ifnzero? e) (ifnzero (compute-free-vars (ifnzero-e1)) (compute-free-vars (ifnzero-e2)) (compute-free-vars (ifnzero-e3)))]
-         [(letrec? e)  (letrec (letrec-s1 e) (compute-free-vars (cnd-e1)) (letrec-s2 e) (compute-free-vars (letrec-e2)) (compute-free-vars (letrec-e3)))]
-         [(ifleq? e)   (ifleq (compute-free-vars (ifleq-e1)) (compute-free-vars (ifleq-e2)) (compute-free-vars (ifleq-e3)) (compute-free-vars (ifleq-e4 e)))]
-         [(with? e)    (with (with-s e) (compute-free-vars (with-e1 e)) (compute-free-vars (with-e2 e)))])
-)
+     (cond
+       [(string? e) e]
+       [(num? e) e]
+       [(bool? e) e]
+       [(var? e) e]
+       [(munit? e) e]
+       [(closure? e) e]
 
-(fun-challenge-freevars (compute-free-vars (lam null "x" (with "y" (num 2) (plus (var "x")(var "y"))))))
+       [(ismunit? e)
+        (ismunit (compute-free-vars e))]
+       [(plus? e)
+        (plus (compute-free-vars (plus-e1 e)) (compute-free-vars (plus-e2 e)))]
+       [(minus? e)
+        (minus (compute-free-vars (minus-e1 e)) (compute-free-vars (minus-e2 e)))]
+       [(mult? e)
+        (mult (compute-free-vars (mult-e1 e)) (compute-free-vars (mult-e2 e)))]
+       [(div? e)
+        (div (compute-free-vars (div-e1 e)) (compute-free-vars (div-e2 e)))]
+       
+       [(neg? e)
+        (neg (compute-free-vars e))]
+       [(andalso? e)
+        (andalso (compute-free-vars (andalso-e1 e)) (compute-free-vars (andalso-e2 e)))]
+       [(orelse? e)
+        (orelse (compute-free-vars (orelse-e1 e)) (compute-free-vars (orelse-e2 e)))]
+       
+       [(cnd? e)
+        (cnd (compute-free-vars (cnd-e1 e)) (compute-free-vars (cnd-e2 e)) (compute-free-vars (cnd-e3 e)))]
+       [(iseq? e)
+        (iseq (compute-free-vars (iseq-e1 e)) (compute-free-vars (iseq-e2 e)))]
+       [(ifnzero? e)
+        (ifnzero (compute-free-vars (ifnzero-e1 e)) (compute-free-vars (ifnzero-e2 e)) (compute-free-vars (ifnzero-e3 e)))]
+       [(ifleq? e)
+        (ifleq (compute-free-vars (ifleq-e1 e)) (compute-free-vars (ifleq-e2 e)) (compute-free-vars (ifleq-e3 e)) (compute-free-vars (ifleq-e4 e)))]
+       
+       [(lam? e)
+        (fun-challenge (lam-s2 e) (lam-s1 e) (lam-e e) (get-free (lam-e e) (set-add (set-add null (lam-s1 e)) (lam-s2 e))))]
+       [(apply? e)   (apply (compute-free-vars (apply-e1)) (compute-free-vars (apply-e2)))]
+
+
+       [(with? e)
+        (with (with-s e) (compute-free-vars (with-e1 e)) (compute-free-vars (with-e2 e)))]
+       
+       [(apair? e)
+          (apair
+           (compute-free-vars (apair-e1 e) (compute-free-vars (apair-e2 e))))]
+       [(1st? e)
+        (1st (compute-free-vars e))]
+       [(2nd? e)
+        (2nd (compute-free-vars e))]
+ 
+       [(key? e)
+        (key (compute-free-vars e))]
+       [(record? e)
+        (record (compute-free-vars (record-k e)) (compute-free-vars (record-r e)))]
+       [(value? e)
+        (value (compute-free-vars e))]
+       
+       [(cons? e)
+        (cons (compute-free-vars (car e)) (compute-free-vars (cdr e)))]
+       )
+  )
+
